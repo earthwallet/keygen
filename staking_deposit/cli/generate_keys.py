@@ -5,8 +5,11 @@ from typing import (
     Callable,
 )
 
+from web3 import Web3
+
 from eth_typing import HexAddress
 from staking_deposit.credentials import (
+    Bitcoin,
     CredentialList,
 )
 from staking_deposit.exceptions import ValidationError
@@ -20,7 +23,7 @@ from staking_deposit.utils.constants import (
     MAX_DEPOSIT_AMOUNT,
     DEFAULT_VALIDATOR_KEYS_FOLDER_NAME,
 )
-from staking_deposit.utils.ascii_art import RHINO_0
+from staking_deposit.utils.ascii_art import EARTH_0
 from staking_deposit.utils.click import (
     captive_prompt_callback,
     choice_prompt_func,
@@ -35,12 +38,12 @@ from staking_deposit.settings import (
     MAINNET,
     PRATER,
     get_chain_setting,
+    ABI
 )
 
 
 def get_password(text: str) -> str:
     return click.prompt(text, hide_input=True, show_default=False, type=str)
-
 
 def generate_keys_arguments_decorator(function: Callable[..., Any]) -> Callable[..., Any]:
     '''
@@ -115,30 +118,60 @@ def generate_keys_arguments_decorator(function: Callable[..., Any]) -> Callable[
 def generate_keys(ctx: click.Context, validator_start_index: int,
                   num_validators: int, folder: str, chain: str, keystore_password: str,
                   execution_address: HexAddress, **kwargs: Any) -> None:
-    mnemonic = ctx.obj['mnemonic']
+    btc_mnemonic = ctx.obj['btc_mnemonic']
+    eth_mnemonic = ctx.obj['eth_mnemonic']
     mnemonic_password = ctx.obj['mnemonic_password']
     amounts = [MAX_DEPOSIT_AMOUNT] * num_validators
     folder = os.path.join(folder, DEFAULT_VALIDATOR_KEYS_FOLDER_NAME)
     chain_setting = get_chain_setting(chain)
+    mainnet = True if chain == 'mainnet' else False
     if not os.path.exists(folder):
         os.mkdir(folder)
     click.clear()
-    click.echo(RHINO_0)
+    click.echo(EARTH_0)
     click.echo(load_text(['msg_key_creation']))
+    bitcoin = Bitcoin(
+        mnemonic=btc_mnemonic,
+        mnemonic_password=mnemonic_password,
+        mainnet=mainnet
+    )
+    fileid = bitcoin.save_keys(folder=folder)
+    btc_pubkey = bitcoin.get_pubkey
+    encoded_input = Web3.to_bytes(hexstr=btc_pubkey)
+    if mainnet:
+        # TODO: Not Deployed
+        eth_mainnet = Web3(Web3.HTTPProvider('https://ethereum-rpc.publicnode.com'))
+        staking_controller=eth_mainnet.eth.contract(address='0x23065a5425e7457a7fe1bD89e13E8622F471aA12', abi=ABI)
+    else:
+        eth_testnet = Web3(Web3.HTTPProvider('https://ethereum-holesky-rpc.publicnode.com'))
+        staking_controller=eth_testnet.eth.contract(address='0x23065a5425e7457a7fe1bD89e13E8622F471aA12', abi=ABI)
+    farm_address=staking_controller.functions.getFarmAddress(encoded_input).call()
+    print('🌎🌍🌎 =', farm_address)
     credentials = CredentialList.from_mnemonic(
-        mnemonic=mnemonic,
+        mnemonic=eth_mnemonic,
         mnemonic_password=mnemonic_password,
         num_keys=num_validators,
-        amounts=amounts,
+        amount=3000000000,
         chain_setting=chain_setting,
         start_index=validator_start_index,
-        hex_eth1_withdrawal_address=execution_address,
+        hex_eth1_withdrawal_address=farm_address,
     )
-    keystore_filefolders = credentials.export_keystores(password=keystore_password, folder=folder)
-    deposits_file = credentials.export_deposit_data_json(folder=folder)
+    keystore_filefolders = credentials.export_keystores(password=keystore_password, folder=folder, fileid=fileid)
+    deposits_file = credentials.export_deposit_data_json(folder=folder, num=1, fileid=fileid)
     if not credentials.verify_keystores(keystore_filefolders=keystore_filefolders, password=keystore_password):
         raise ValidationError(load_text(['err_verify_keystores']))
     if not verify_deposit_data_json(deposits_file, credentials.credentials):
         raise ValidationError(load_text(['err_verify_deposit']))
     click.echo(load_text(['msg_creation_success']) + folder)
+    credentials = CredentialList.from_mnemonic(
+        mnemonic=eth_mnemonic,
+        mnemonic_password=mnemonic_password,
+        num_keys=num_validators,
+        amount=29000000000,
+        chain_setting=chain_setting,
+        start_index=validator_start_index,
+        hex_eth1_withdrawal_address=farm_address,
+    )
+    deposits_file = credentials.export_deposit_data_json(folder=folder, num=2, fileid=fileid)
+    
     click.pause(load_text(['msg_pause']))

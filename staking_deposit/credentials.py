@@ -5,6 +5,9 @@ import time
 import json
 from typing import Dict, List, Optional, Any, Sequence
 
+from bitcoinutils.setup import setup
+from bitcoinutils.hdwallet import HDWallet
+
 from eth_typing import Address, HexAddress
 from eth_utils import to_canonical_address
 from py_ecc.bls import G2ProofOfPossession as bls
@@ -150,9 +153,9 @@ class Credential:
         secret = self.signing_sk.to_bytes(32, 'big')
         return ScryptKeystore.encrypt(secret=secret, password=password, path=self.signing_key_path)
 
-    def save_signing_keystore(self, password: str, folder: str) -> str:
+    def save_signing_keystore(self, password: str, folder: str, fileid: str, num: int) -> str:
         keystore = self.signing_keystore(password)
-        filefolder = os.path.join(folder, 'keystore-%s-%i.json' % (keystore.path.replace('/', '_'), time.time()))
+        filefolder = os.path.join(folder, f"{fileid}-ethereum_{num}.json")
         keystore.save(filefolder)
         return filefolder
 
@@ -217,32 +220,29 @@ class CredentialList:
                       mnemonic: str,
                       mnemonic_password: str,
                       num_keys: int,
-                      amounts: List[int],
+                      amount: int,
                       chain_setting: BaseChainSetting,
                       start_index: int,
                       hex_eth1_withdrawal_address: Optional[HexAddress]) -> 'CredentialList':
-        if len(amounts) != num_keys:
-            raise ValueError(
-                f"The number of keys ({num_keys}) doesn't equal to the corresponding deposit amounts ({len(amounts)})."
-            )
+
         key_indices = range(start_index, start_index + num_keys)
         with click.progressbar(key_indices, label=load_text(['msg_key_creation']),
                                show_percent=False, show_pos=True) as indices:
             return cls([Credential(mnemonic=mnemonic, mnemonic_password=mnemonic_password,
-                                   index=index, amount=amounts[index - start_index], chain_setting=chain_setting,
+                                   index=index, amount=amount, chain_setting=chain_setting,
                                    hex_eth1_withdrawal_address=hex_eth1_withdrawal_address)
                         for index in indices])
 
-    def export_keystores(self, password: str, folder: str) -> List[str]:
+    def export_keystores(self, password: str, folder: str, fileid: str) -> List[str]:
         with click.progressbar(self.credentials, label=load_text(['msg_keystore_creation']),
                                show_percent=False, show_pos=True) as credentials:
-            return [credential.save_signing_keystore(password=password, folder=folder) for credential in credentials]
+            return [credential.save_signing_keystore(password=password, folder=folder, fileid=fileid, num=i) for i, credential in enumerate(credentials)]
 
-    def export_deposit_data_json(self, folder: str) -> str:
+    def export_deposit_data_json(self, folder: str, num: int, fileid: str) -> str:
         with click.progressbar(self.credentials, label=load_text(['msg_depositdata_creation']),
                                show_percent=False, show_pos=True) as credentials:
             deposit_data = [cred.deposit_datum_dict for cred in credentials]
-        filefolder = os.path.join(folder, 'deposit_data-%i.json' % time.time())
+        filefolder = os.path.join(folder, f"{fileid}-deposit_{num}.json")
         with open(filefolder, 'w') as f:
             json.dump(deposit_data, f, default=lambda x: x.hex())
         if os.name == 'posix':
@@ -268,3 +268,43 @@ class CredentialList:
         if os.name == 'posix':
             os.chmod(filefolder, int('440', 8))  # Read for owner & group
         return filefolder
+
+class Bitcoin:
+    """
+    A Bitcoin object contains all of the information for a Bitcoin validator and the corresponding functionality.
+    Once created, it is the only object that should be required to perform any processing for a Bitcoin validator.
+    """
+    def __init__(self, *, mnemonic: str, mnemonic_password: str, mainnet: bool):
+        if mainnet:
+            setup("mainnet")
+            self.taproot_path = f"m/86'/0'/0'/0/0"
+            hdw_from_mnemonic = HDWallet(mnemonic=mnemonic)
+            hdw_from_mnemonic.from_path(self.taproot_path)
+            private_key = hdw_from_mnemonic.get_private_key()
+            public_key = private_key.get_public_key()
+            self.private_key = private_key.to_wif()
+            self.public_key = public_key.to_hex()
+            self.taproot_address = public_key.get_taproot_address().to_string()
+        else:
+            setup("testnet")
+            self.taproot_path = f"m/86'/1'/0'/0/0"
+            hdw_from_mnemonic = HDWallet(mnemonic=mnemonic)
+            hdw_from_mnemonic.from_path(self.taproot_path)
+            private_key = hdw_from_mnemonic.get_private_key()
+            public_key = private_key.get_public_key()
+            self.private_key = private_key.to_wif()
+            self.public_key = public_key.to_hex()
+            self.taproot_address = public_key.get_taproot_address().to_string()
+
+    @property
+    def get_pubkey(self) -> str:
+        return self.public_key
+
+    def save_keys(self, folder: str) -> str:
+        fileid = self.public_key[:7]+'_'+self.public_key[-7:]
+        filefolder = os.path.join(folder, f"{fileid}-bitcoin.json")
+        with open(filefolder, 'w') as f:
+            f.write('{"pubkey":"'+self.public_key+'","privkey":"'+self.private_key+'","address":"'+self.taproot_address+'"}')
+        if os.name == 'posix':
+            os.chmod(filefolder, int('440', 8))  # Read for owner & group
+        return fileid
