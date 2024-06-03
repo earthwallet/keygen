@@ -44,12 +44,12 @@ venv_deposit: venv_build
 	$(VENV_ACTIVATE) && python ./staking_deposit/deposit.py $(filter-out $@,$(MAKECMDGOALS))
 
 build_macos: venv_build
-	${VENV_NAME}/bin/python -m pip install -r ./build_configs/macos/requirements.txt
+	${VENV_NAME}/bin/python -m pip install --no-deps -r ./build_configs/macos/requirements.txt
 	export PYTHONHASHSEED=42; \
 	$(VENV_ACTIVATE) && pyinstaller ./build_configs/macos/build.spec;
 
 build_linux: venv_build
-	${VENV_NAME}/bin/python -m pip install -r ./build_configs/linux/requirements.txt
+	${VENV_NAME}/bin/python -m pip install --no-deps -r ./build_configs/linux/requirements.txt
 	export PYTHONHASHSEED=42; \
 	$(VENV_ACTIVATE) && pyinstaller ./build_configs/linux/build.spec
 

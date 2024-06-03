@@ -8,7 +8,7 @@ tox_common: &tox_common
         key: tox-deps4-{{ arch }}-{{ .Environment.CIRCLE_JOB }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements_test.txt" }}-{{ checksum "setup.py" }}-{{ checksum "Makefile" }}
     - run:
         name: install dependencies
-        command: pip install tox
+        command: pip install --no-deps tox
     - run:
         name: run tox
         command: tox
@@ -86,7 +86,7 @@ jobs:
       - checkout
       - run:
           name: Install testing requirements on Windows
-          command: python -m pip install -r requirements_test.txt
+          command: python -m pip install --no-deps -r requirements_test.txt
       - run:
           name: Run deposit script on Windows"
           command: python ./test_deposit_script.py
@@ -104,7 +104,7 @@ jobs:
           command: |
             env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f 3.12.1;
             pyenv global 3.12.1;
-            pip install -r ./build_configs/linux/requirements.txt;
+            pip install --no-deps -r ./build_configs/linux/requirements.txt;
       - run:
           name: Build with build.spec
           command: |
@@ -152,7 +152,7 @@ jobs:
           command: |
             env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -f 3.12.1;
             pyenv global 3.12.1;
-            pip install -r ./build_configs/linux/requirements.txt;
+            pip install --no-deps -r ./build_configs/linux/requirements.txt;
       - run:
           name: Build with build.spec
           command: |
@@ -195,7 +195,7 @@ jobs:
       - checkout
       - run:
           name: Install building requirements on Windows
-          command: pip install -r ./build_configs/windows/requirements.txt
+          command: pip install --no-deps -r ./build_configs/windows/requirements.txt
       - run:
           name: Build with build.spec
           command: |
