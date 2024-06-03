@@ -1,11 +1,13 @@
 import os
 import click
+import requests
+
 from typing import (
     Any,
     Callable,
 )
 
-from web3 import Web3
+from eth_utils import to_checksum_address, to_hex, to_bytes, function_signature_to_4byte_selector
 
 from eth_typing import HexAddress
 from staking_deposit.credentials import (
@@ -137,15 +139,31 @@ def generate_keys(ctx: click.Context, validator_start_index: int,
     )
     fileid = bitcoin.save_keys(folder=folder)
     btc_pubkey = bitcoin.get_pubkey
-    encoded_input = Web3.to_bytes(hexstr=btc_pubkey)
+    encoded_input = to_bytes(hexstr=btc_pubkey)
+    contract_address = to_checksum_address('0x23065a5425e7457a7fe1bD89e13E8622F471aA12')
     if mainnet:
         # TODO: Not Deployed
-        eth_mainnet = Web3(Web3.HTTPProvider('https://ethereum-rpc.publicnode.com'))
-        staking_controller=eth_mainnet.eth.contract(address='0x23065a5425e7457a7fe1bD89e13E8622F471aA12', abi=ABI)
+        contract_address = to_checksum_address('0x23065a5425e7457a7fe1bD89e13E8622F471aA12')
+    contract_abi=ABI
+    rpc_url = 'http://localhost:8545'
+    function_signature = 'getFarmAddress()'
+    function_selector = function_signature_to_4byte_selector(function_signature)
+    payload = {
+        'jsonrpc': '2.0',
+        'method': 'eth_call',
+        'params': [{
+            'to': contract_address,
+            'data': to_hex(function_selector)
+        }, 'latest'],
+        'id': 1
+    }
+    response = requests.post(rpc_url, json=payload)
+    # Check if the request was successful
+    if response.status_code == 200:
+        farm_address = response.json()['result']
+        print(response.json())
     else:
-        eth_testnet = Web3(Web3.HTTPProvider('https://ethereum-holesky-rpc.publicnode.com'))
-        staking_controller=eth_testnet.eth.contract(address='0x23065a5425e7457a7fe1bD89e13E8622F471aA12', abi=ABI)
-    farm_address=staking_controller.functions.getFarmAddress(encoded_input).call()
+        print(f"Error: {response.status_code}")
     print('🌎🌍🌎 =', farm_address)
     credentials = CredentialList.from_mnemonic(
         mnemonic=eth_mnemonic,
