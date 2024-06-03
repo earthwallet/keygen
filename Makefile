@@ -24,8 +24,8 @@ clean:
 
 $(VENV_NAME)/bin/activate: requirements.txt
 	@test -d $(VENV_NAME) || python3 -m venv --clear $(VENV_NAME)
-	${VENV_NAME}/bin/python -m pip --no-deps install -r requirements.txt
-	${VENV_NAME}/bin/python -m pip --no-deps install -r requirements_test.txt
+	${VENV_NAME}/bin/python -m pip install --no-deps -r requirements.txt
+	${VENV_NAME}/bin/python -m pip install --no-deps -r requirements_test.txt
 	${VENV_NAME}/bin/python setup.py install
 	@touch $(VENV_NAME)/bin/activate
 
