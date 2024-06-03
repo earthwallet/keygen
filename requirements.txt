@@ -40,6 +40,8 @@ ssz==0.2.4 \
 eth-typing==2.3.0 \
     --hash=sha256:39cce97f401f082739b19258dfa3355101c64390914c73fe2b90012f443e0dc7 \
     --hash=sha256:b7fa58635c1cb0cbf538b2f5f1e66139575ea4853eac1d6000f0961a4b277422
+bitcoin-utils==0.6.8 \
+    --hash=sha256:e68b814c2c4828a2a57684a100c1872704011f1a3465e392ca963aa05913cad9
 
 # Dependencies for the above
 eth-utils==1.10.0 \
@@ -252,5 +254,13 @@ cached-property==1.5.2 \
 setuptools==69.1.0 \
     --hash=sha256:850894c4195f09c4ed30dba56213bf7c3f21d86ed6bdaafb5df5972593bfc401 \
     --hash=sha256:c054629b81b946d63a9c6e732bc8b2513a7c3ea645f11d0139a2191d735c60c6
-bitcoin-utils==0.6.8 \
-    --hash=sha256:e68b814c2c4828a2a57684a100c1872704011f1a3465e392ca963aa05913cad9
+base58check==1.0.2 \
+    --hash=sha256:a83863696845a9b0b5ec95aebb32ebfc6ce5596984302c0f2b7b27f24afc2719
+ecdsa==0.18.0 \
+    --hash=sha256:80600258e7ed2f16b9aa1d7c295bd70194109ad5a30fdee0eaeefef1d4c559dd
+sympy==1.12.1 \
+    --hash=sha256:9b2cbc7f1a640289430e13d2a56f02f867a1da0190f2f99d8968c2f74da0e515
+python-bitcoinrpc==1.0 \
+    --hash=sha256:a6a6f35672635163bc491c25fe29520bdd063dedbeda3b37bf5be97aa038c6e7
+hdwallet==2.2.1 \
+    --hash=sha256:a55f91d087f777770b7094699931f4db9c5236b49fe481c443df23c6621286d7
