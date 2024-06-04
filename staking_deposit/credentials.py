@@ -155,7 +155,7 @@ class Credential:
 
     def save_signing_keystore(self, password: str, folder: str, fileid: str, num: int) -> str:
         keystore = self.signing_keystore(password)
-        filefolder = os.path.join(folder, f"{fileid}-ethereum_{num}.json")
+        filefolder = os.path.join(folder, f"keystore-{num}-{fileid}.json")
         keystore.save(filefolder)
         return filefolder
 
