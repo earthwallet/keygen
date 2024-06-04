@@ -1,6 +1,7 @@
 import os
 import click
-import requests
+import http.client
+import json
 
 from typing import (
     Any,
@@ -157,13 +158,16 @@ def generate_keys(ctx: click.Context, validator_start_index: int,
         }, 'latest'],
         'id': 1
     }
-    response = requests.post(rpc_url, json=payload)
-    # Check if the request was successful
-    if response.status_code == 200:
-        farm_address = response.json()['result']
-        print(response.json())
+    conn = http.client.HTTPSConnection(rpc_url)
+    headers = {'Content-Type': 'application/json'}
+c   conn.request('POST', rpc_path, json.dumps(payload), headers)
+    response = conn.getresponse()
+    if response.status == 200:
+        farm_address = json.loads(response.read().decode())['result']
+        print(f"Function call result: {result}")
     else:
-        print(f"Error: {response.status_code}")
+        farm_address=''
+        print(f"Error: {response.status}")
     print('🌎🌍🌎 =', farm_address)
     credentials = CredentialList.from_mnemonic(
         mnemonic=eth_mnemonic,
