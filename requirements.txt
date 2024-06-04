@@ -42,6 +42,8 @@ eth-typing==2.3.0 \
     --hash=sha256:b7fa58635c1cb0cbf538b2f5f1e66139575ea4853eac1d6000f0961a4b277422
 bitcoin-utils==0.6.8 \
     --hash=sha256:e68b814c2c4828a2a57684a100c1872704011f1a3465e392ca963aa05913cad9
+requests==2.32.3 \
+    --hash=sha256:70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6
 
 # Dependencies for the above
 eth-utils==1.10.0 \
