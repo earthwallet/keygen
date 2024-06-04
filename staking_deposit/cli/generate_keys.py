@@ -152,7 +152,7 @@ def generate_keys(ctx: click.Context, validator_start_index: int,
         }, 'latest'],
         'id': 1
     }
-    conn = http.client.HTTPSConnection('localhost', 8545)
+    conn = http.client.HTTPConnection('localhost', 8545)
     conn.request('POST', '/', json.dumps(payload), {'Content-Type': 'application/json'})
     response = conn.getresponse()
     response_data = response.read().decode('utf-8')
