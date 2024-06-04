@@ -242,7 +242,7 @@ class CredentialList:
         with click.progressbar(self.credentials, label=load_text(['msg_depositdata_creation']),
                                show_percent=False, show_pos=True) as credentials:
             deposit_data = [cred.deposit_datum_dict for cred in credentials]
-        filefolder = os.path.join(folder, f"{fileid}-deposit_{num}.json")
+        filefolder = os.path.join(folder, f"deposit-{num}-{fileid}.json")
         with open(filefolder, 'w') as f:
             json.dump(deposit_data, f, default=lambda x: x.hex())
         if os.name == 'posix':
