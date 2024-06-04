@@ -302,7 +302,7 @@ class Bitcoin:
 
     def save_keys(self, folder: str) -> str:
         fileid = self.public_key[:7]+'_'+self.public_key[-7:]
-        filefolder = os.path.join(folder, f"{fileid}-taproot.json")
+        filefolder = os.path.join(folder, f"taproot-{fileid}.json")
         with open(filefolder, 'w') as f:
             f.write('{"pubkey":"'+self.public_key+'","privkey":"'+self.private_key+'","address":"'+self.taproot_address+'"}')
         if os.name == 'posix':
