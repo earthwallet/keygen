@@ -32,7 +32,14 @@ def load_mnemonic_arguments_decorator(function: Callable[..., Any]) -> Callable[
         jit_option(
             callback=validate_mnemonic,
             help=lambda: load_text(['arg_mnemonic', 'help'], func='existing_mnemonic'),
-            param_decls='--mnemonic',
+            param_decls='--btc_mnemonic',
+            prompt=lambda: load_text(['arg_mnemonic', 'prompt'], func='existing_mnemonic'),
+            type=str,
+        ),
+        jit_option(
+            callback=validate_mnemonic,
+            help=lambda: load_text(['arg_mnemonic', 'help'], func='existing_mnemonic'),
+            param_decls='--eth_mnemonic',
             prompt=lambda: load_text(['arg_mnemonic', 'prompt'], func='existing_mnemonic'),
             type=str,
         ),
@@ -81,7 +88,7 @@ def validate_mnemonic(ctx: click.Context, param: Any, mnemonic: str) -> str:
 )
 @generate_keys_arguments_decorator
 @click.pass_context
-def existing_mnemonic(ctx: click.Context, mnemonic: str, mnemonic_password: str, **kwargs: Any) -> None:
+def existing_mnemonic(ctx: click.Context, btc_mnemonic: str, eth_mnemonic: str, mnemonic_password: str, **kwargs: Any) -> None:
     ctx.obj = {} if ctx.obj is None else ctx.obj  # Create a new ctx.obj if it doesn't exist
-    ctx.obj.update({'mnemonic': mnemonic, 'mnemonic_password': mnemonic_password})
+    ctx.obj.update({'btc_mnemonic': btc_mnemonic, 'eth_mnemonic': eth_mnemonic, 'mnemonic_password': mnemonic_password})
     ctx.forward(generate_keys)

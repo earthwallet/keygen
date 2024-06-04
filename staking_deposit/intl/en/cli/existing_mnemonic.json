@@ -4,7 +4,7 @@
     },
     "existing_mnemonic": {
         "arg_existing_mnemonic": {
-            "help": "Generate (or recover) keys from an existing mnemonic"
+            "help": "Generate (or recover) keys from existing mnemonics"
         },
         "arg_mnemonic": {
             "help": "The mnemonic that you used to generate your keys. (It is recommended not to use this argument, and wait for the CLI to ask you for your mnemonic as otherwise it will appear in your shell history.)",
